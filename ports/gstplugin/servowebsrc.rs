@@ -217,7 +217,7 @@ impl ServoThread {
             .expect("Failed to get webrender swap chain")
             .clone();
         let servo = Servo::new(embedder, window, None);
-        let id = servo.top_level_browsing_context_id;
+        let id = servo.browser_id;
         let mut servo = servo.servo;
 
         servo.handle_events(vec![EmbedderEvent::NewBrowser(url, id)]);
@@ -366,7 +366,7 @@ impl WindowMethods for ServoWebSrcWindow {
             .unwrap_or(None)
             .map(|info| Size2D::from_untyped(info.size))
             .unwrap_or(Size2D::new(0, 0));
-        info!("EMBEDDER coordinates {}", size);
+        info!("EMBEDDER coordinates {:?}", size);
         let origin = Point2D::origin();
         EmbedderCoordinates {
             hidpi_factor: Scale::new(1.0),
@@ -1025,7 +1025,7 @@ impl ServoWebSrc {
                 let read_texture_target = gfx.device.surface_gl_texture_target();
 
                 debug!(
-                    "Filling with {}/{} {}",
+                    "Filling with {}/{} {:?}",
                     read_texture_id, read_texture_target, surface_size
                 );
                 gfx.gl.bind_framebuffer(gl::READ_FRAMEBUFFER, gfx.read_fbo);

@@ -2,10 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use std::env;
+use std::{
+    env,
+    collections::HashMap,
+};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use cargo::Vars as CargoVars;
 
 fn main() {
     println!("cargo:rerun-if-changed=../../python/servo/gstreamer.py");
@@ -20,6 +24,23 @@ fn main() {
         eprintln!("{}", String::from_utf8_lossy(&output.stderr));
         std::process::exit(1)
     }
+    let cvars = CargoVars::from_env();
+    {
+        let mut features = cvars.features()
+            .peekable();
+        if features.peek().is_none() {
+            println!("cargo:warning={}", "no features found");
+        } else {
+            for (k, v) in features {
+                println!("cargo:warning={}", format_args!("{}={}", k, v));
+            }
+        }
+    }
+    cvars.iter()
+        .map(|(k, ..)| k)
+        .for_each(|k| {
+            println!("cargo:warning={}", k);
+        });
     let path = Path::new(&env::var_os("OUT_DIR").unwrap()).join("gstreamer_plugins.rs");
     fs::write(path, output.stdout).unwrap();
 }
@@ -46,4 +67,45 @@ fn find_python() -> String {
             candidates.join(", ")
         )
     })
+}
+
+mod cargo {
+    use std::{
+        env,
+        collections::HashMap,
+    };
+
+    #[repr(transparent)]
+    pub struct Vars(HashMap<String, String>);
+
+    #[inline(always)]
+    fn feature_key(name: &str) -> String {
+        format!("CARGO_FEATURE_{}", name.replace('-', "_").to_uppercase())
+    }
+
+    impl Vars {
+        pub fn from_env() -> Self {
+            let vars: HashMap<String, String> = env::vars()
+                .filter(|&(ref k, ref _v)| k.starts_with("CARGO_"))
+                .collect();
+            Vars(vars)
+        }
+
+        #[inline]
+        pub fn iter<'a>(&'a self) -> impl Iterator<Item=(&'a str, &'a str)> + 'a {
+            self.0.iter()
+                .map(|(k, v)| (k.as_ref(), v.as_ref()))
+        }
+
+        pub fn features<'a>(&'a self) -> impl Iterator<Item=(&'a str, &'a str)> + 'a {
+            self.0.iter()
+                .filter(|&(k, ..)| k.starts_with("CARGO_FEATURE_"))
+                .map(|(k, v)| (k.as_ref(), v.as_ref()))
+        }
+
+        pub fn has_feature(&self, name: &str) -> bool {
+            self.0.get(&feature_key(name))
+                .is_some()
+        }
+    }
 }

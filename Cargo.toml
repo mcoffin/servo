@@ -118,3 +118,7 @@ immeta = { git = "https://github.com/fabricedesre/immeta.git" }
 [patch."https://github.com/servo/webrender"]
 webrender = { path = "third_party/webrender/webrender" }
 webrender_api = { path = "third_party/webrender/webrender_api" }
+
+[patch."https://github.com/servo/mozjs"]
+mozjs = { path = "third_party/mozjs/rust-mozjs" }
+mozjs_sys = { path = "third_party/mozjs/mozjs" }
