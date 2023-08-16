@@ -246,6 +246,33 @@ pub struct InitializedServo<Window: WindowMethods + 'static + ?Sized> {
     pub browser_id: BrowserId,
 }
 
+#[cfg(not(feature = "static-jsengine-setup"))]
+fn init_js_engine(opts: &opts::Opts) -> Option<JSEngineSetup> {
+    if opts.multiprocess {
+        Some(script::init())
+    } else {
+        None
+    }
+}
+
+#[cfg(feature = "static-jsengine-setup")]
+static mut STATIC_JS_ENGINE_SETUP: Option<JSEngineSetup> = None;
+#[cfg(feature = "static-jsengine-setup")]
+static INIT_JS_ENGINE_SETUP: std::sync::Once = std::sync::Once::new();
+
+#[cfg(feature = "static-jsengine-setup")]
+fn init_js_engine(opts: &opts::Opts) -> Option<JSEngineSetup> {
+    if !opts.multiprocess {
+        INIT_JS_ENGINE_SETUP.call_once(|| {
+            let js = script::init();
+            unsafe {
+                STATIC_JS_ENGINE_SETUP = Some(js);
+            }
+        });
+    }
+    None
+}
+
 impl<Window> Servo<Window>
 where
     Window: WindowMethods + 'static + ?Sized,
@@ -389,11 +416,7 @@ where
 
         // Important that this call is done in a single-threaded fashion, we
         // can't defer it after `create_constellation` has started.
-        let js_engine_setup = if !opts.multiprocess {
-            Some(script::init())
-        } else {
-            None
-        };
+        let js_engine_setup = init_js_engine(&opts);
 
         // Create the webgl thread
         let gl_type = match webrender_gl.get_type() {

@@ -32,6 +32,7 @@ webgl_backtrace = [
 ]
 webrender_debugger = ["webrender/debugger"]
 xr-profile = ["canvas/xr-profile", "canvas_traits/xr-profile", "script/xr-profile", "webxr/profile"]
+static-jsengine-setup = []
 
 [dependencies]
 background_hang_monitor = { path = "../background_hang_monitor" }
