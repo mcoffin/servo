@@ -26,11 +26,13 @@ gstreamer-sys = "0.8"
 gstreamer-video = "0.15"
 lazy_static = { workspace = true }
 libservo = { path = "../../components/servo", features = ["media-gstreamer"] }
+servo_config = { path = "../../components/config" }
 log = { workspace = true }
 servo-media = { git = "https://github.com/servo/media" }
 sparkle = { workspace = true }
 surfman = { workspace = true }
 webxr = { git = "https://github.com/servo/webxr", features = ["glwindow"] }
+thiserror = "1.0"
 
 [build-dependencies]
 gst-plugin-version-helper = "0.2"

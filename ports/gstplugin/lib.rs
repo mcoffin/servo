@@ -6,6 +6,7 @@ use glib::subclass::types::ObjectSubclass;
 use gstreamer::gst_plugin_define;
 use servowebsrc::ServoWebSrc;
 
+mod config;
 mod logging;
 mod resources;
 mod servowebsrc;
@@ -23,6 +24,11 @@ gst_plugin_define!(
 );
 
 fn plugin_init(plugin: &gstreamer::Plugin) -> Result<(), glib::BoolError> {
+    // Make any changes we might want to against the global servo config `Opts`, but only once.
+    // This function is guarded with an `std::sync::Once` to make sure we don't re-override things
+    // unintentionally later.
+    config::init();
+
     gstreamer::gst_debug!(logging::CATEGORY, "Initializing logging");
     log::set_logger(&logging::LOGGER).expect("Failed to set logger");
     log::set_max_level(log::LevelFilter::Debug);

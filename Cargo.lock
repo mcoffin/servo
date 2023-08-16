@@ -5511,8 +5511,10 @@ dependencies = [
  "libservo",
  "log",
  "servo-media",
+ "servo_config",
  "sparkle",
  "surfman",
+ "thiserror",
  "webxr",
 ]
 
